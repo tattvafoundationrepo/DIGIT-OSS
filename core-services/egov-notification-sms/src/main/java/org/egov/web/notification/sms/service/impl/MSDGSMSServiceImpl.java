@@ -104,7 +104,11 @@ public class MSDGSMSServiceImpl extends BaseSMSService {
 
         String encryptedPwd = MD5(password);
         String hashMsg = hashGenerator(username, senderid, message, secureKey);
-
+        log.info("uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu"+username);
+        log.info("siiiiiiiiiiiiiiiiiiddddddddddd"+senderid);
+        log.info("mmmmmmmmmmmmmmmmmmmmmmmmmmmmmm"+message);
+        log.info("kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk"+secureKey);
+        log.info("hashhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh"+hashMsg);
         List<String> entriesToBeModified = new ArrayList<>();
         for (String key : requestBody.keySet()) {
             if (key.equals(configMap.get(SMSConstants.SENDER_PASSWORD_IDENTIFIER))) {
