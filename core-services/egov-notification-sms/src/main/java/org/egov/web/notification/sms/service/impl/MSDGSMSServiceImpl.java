@@ -170,6 +170,7 @@ public class MSDGSMSServiceImpl extends BaseSMSService {
         StringBuffer finalString = new StringBuffer();
         finalString.append(userName.trim()).append(senderId.trim()).append(content.trim()).append(secureKey.trim());
         String hashGen = finalString.toString();
+        log.info("hashhhhhhhhinnnnggggggggg   "+hashGen);
         StringBuffer sb = null;
         MessageDigest md;
         try {
