@@ -1,6 +1,7 @@
 package org.egov.web.notification.sms.service.impl;
 
 import lombok.extern.slf4j.Slf4j;
+
 import org.egov.web.notification.sms.config.SMSConstants;
 import org.egov.web.notification.sms.config.SMSProperties;
 import org.egov.web.notification.sms.models.Sms;
@@ -18,9 +19,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.*;
 import java.security.KeyManagementException;
-import java.security.MessageDigest;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
+import java.security.MessageDigest;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
@@ -28,11 +29,13 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import javax.net.ssl.SSLContext;
+
 import javax.annotation.PostConstruct;
+import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.X509TrustManager;
+
 
 
 @Service
@@ -45,7 +48,7 @@ public class MSDGSMSServiceImpl extends BaseSMSService {
 
     @Autowired
     private SMSBodyBuilder bodyBuilder;
-
+    
     private SSLContext sslContext;
 
     @PostConstruct
@@ -69,7 +72,7 @@ public class MSDGSMSServiceImpl extends BaseSMSService {
 				 */
 
 				try (InputStream is = getClass().getClassLoader().getResourceAsStream("smsgwsmsgovin.cer")) {
-					log.info("lasttttttchanceeeeeee"+is.toString());
+                    log.info("lasttttttchanceeeeeee"+is.toString());
 					CertificateFactory certFactory = CertificateFactory.getInstance("X.509");
 					X509Certificate caCert = (X509Certificate) certFactory.generateCertificate(is);
 
@@ -115,7 +118,7 @@ public class MSDGSMSServiceImpl extends BaseSMSService {
 
 
 
-    
+
 
     /**
      * MD5 encryption algorithm
@@ -134,6 +137,13 @@ public class MSDGSMSServiceImpl extends BaseSMSService {
             log.error("Exception while encrypting the pwd: ", e);
         }
         return convertedToHex(md5);
+
+        // MessageDigest md;
+        // md = MessageDigest.getInstance("SHA-1");
+        // byte[] md5 = new byte[64];
+        // md.update(text.getBytes("iso-8859-1"), 0, text.length());
+        // md5 = md.digest();
+        // return convertedToHex(md5);
 
     }
 
@@ -158,6 +168,7 @@ public class MSDGSMSServiceImpl extends BaseSMSService {
     }
 
     protected void submitToExternalSmsService(Sms sms) {
+        MSDGSMSServiceImpl m1 = new MSDGSMSServiceImpl();
         String finalmessage = "";
         for (int i = 0; i < sms.getMessage().length(); i++) {
             char ch = sms.getMessage().charAt(i);
@@ -170,6 +181,7 @@ public class MSDGSMSServiceImpl extends BaseSMSService {
         final MultiValueMap<String, String> requestBody = bodyBuilder.getSmsRequestBody(sms);
         postProcessor(requestBody);
         HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(requestBody, getHttpHeaders());
+        log.info("RRRRRRRRRRRRRRRRRRRRRRRRRRRR"+request.toString());
         executeAPI(URI.create(url), HttpMethod.POST, request, String.class);
     }
 
@@ -185,7 +197,7 @@ public class MSDGSMSServiceImpl extends BaseSMSService {
         String senderid = requestBody.getFirst(configMap.get(SMSConstants.SENDER_SENDERID_IDENTIFIER));
         String message = requestBody.getFirst(configMap.get(SMSConstants.SENDER_MESSAGE_IDENTIFIER));
         String secureKey = requestBody.getFirst(configMap.get(SMSConstants.SENDER_SECUREKEY_IDENTIFIER));
-
+       // sendUnicodeOtpSMS(username,password,message,senderid,"7809840269","a75b07c8-4102-42ad-ab30-f64cf00cfb35","1007088680728172681");
         String encryptedPwd = MD5(password);
         String hashMsg = hashGenerator(username, senderid, message, secureKey);
         log.info("uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu"+username);
@@ -236,6 +248,8 @@ public class MSDGSMSServiceImpl extends BaseSMSService {
                     configMap.put(SMSConstants.SENDER_MOBNO_IDENTIFIER, key);
                 else if (value.equals("$message"))
                     configMap.put(SMSConstants.SENDER_MESSAGE_IDENTIFIER, key);
+
+               log.info(""+configMap.toString());
             }
         }
         return configMap;
@@ -275,4 +289,27 @@ public class MSDGSMSServiceImpl extends BaseSMSService {
         return sb.toString();
     }
 
+    private String hashGenerator1(String userName, String senderId, String content, String secureKey) {
+        StringBuffer finalString = new StringBuffer();
+        finalString.append(userName.trim()).append(senderId.trim()).append(content.trim()).append(secureKey.trim());
+        String hashGen = finalString.toString();
+        StringBuffer sb = null;
+        MessageDigest md;
+        try {
+            md = MessageDigest.getInstance("SHA-512");
+            md.update(hashGen.getBytes());
+            byte byteData[] = md.digest();
+            // convert the byte to hex format method 1
+            sb = new StringBuffer();
+            for (int i = 0; i < byteData.length; i++) {
+                sb.append(Integer.toString((byteData[i] & 0xff) + 0x100, 16).substring(1));
+            }
+
+        } catch (Exception e) {
+            log.error("Exception while generating the hash: ", e);
+        }
+        return sb.toString();
+    }
+
+  
 }
