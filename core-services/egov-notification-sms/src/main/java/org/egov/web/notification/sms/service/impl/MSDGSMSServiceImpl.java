@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import javax.net.ssl.SSLContext;
 
 @Service
 @Slf4j
@@ -32,6 +33,75 @@ public class MSDGSMSServiceImpl extends BaseSMSService {
     @Autowired
     private SMSBodyBuilder bodyBuilder;
 
+    private SSLContext sslContext;
+
+    @PostConstruct
+	private void postConstruct() {
+		log.info("postConstruct() start");
+		try {
+			sslContext = SSLContext.getInstance("TLSv1.2");
+			if (smsProperties.isVerifyCertificate()) {
+				log.info("checking certificate");
+				/*
+				 * KeyStore trustStore = KeyStore.getInstance(KeyStore.getDefaultType()); //File
+				 * file = new File(System.getenv("JAVA_HOME")+"/lib/security/cacerts"); File
+				 * file = ResourceUtils.getFile("classpath:smsgwsmsgovin.cer"); InputStream is =
+				 * new FileInputStream(file); trustStore.load(is, "changeit".toCharArray());
+				 * TrustManagerFactory trustFactory = TrustManagerFactory
+				 * .getInstance(TrustManagerFactory.getDefaultAlgorithm());
+				 * trustFactory.init(trustStore);
+				 * 
+				 * TrustManager[] trustManagers = trustFactory.getTrustManagers();
+				 * sslContext.init(null, trustManagers, null);
+				 */
+
+				try (InputStream is = getClass().getClassLoader().getResourceAsStream("smsgwsmsgovin.cer")) {
+					CertificateFactory certFactory = CertificateFactory.getInstance("X.509");
+					X509Certificate caCert = (X509Certificate) certFactory.generateCertificate(is);
+
+					KeyStore trustStore = KeyStore.getInstance(KeyStore.getDefaultType());
+					trustStore.load(null);
+					trustStore.setCertificateEntry("caCert", caCert);
+
+					TrustManagerFactory trustFactory = TrustManagerFactory
+							.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+					trustFactory.init(trustStore);
+
+					TrustManager[] trustManagers = trustFactory.getTrustManagers();
+					sslContext.init(null, trustManagers, null);
+				} catch (KeyManagementException | IllegalStateException | CertificateException | KeyStoreException | IOException e) {
+					log.error("Not able to load SMS certificate from the specified path {}", e.getMessage());
+				}
+			} else {
+				log.info("not checking certificate");
+				TrustManager tm = new X509TrustManager() {
+					@Override
+					public void checkClientTrusted(java.security.cert.X509Certificate[] chain, String authType)
+							throws java.security.cert.CertificateException {
+					}
+
+					@Override
+					public void checkServerTrusted(java.security.cert.X509Certificate[] chain, String authType)
+							throws java.security.cert.CertificateException {
+					}
+
+					@Override
+					public java.security.cert.X509Certificate[] getAcceptedIssuers() {
+						return null;
+					}
+				};
+				sslContext.init(null, new TrustManager[] { tm }, null);
+			}
+			SSLContext.setDefault(sslContext);
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+
+
+    
 
     /**
      * MD5 encryption algorithm
