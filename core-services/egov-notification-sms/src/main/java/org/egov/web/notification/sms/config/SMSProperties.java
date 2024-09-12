@@ -43,6 +43,8 @@ public class SMSProperties {
 
     @Value("#{${sms.extra.config.map}}")
     Map<String, String> extraConfigMap;
+    @Value("${sms.verify.certificate:false}")
+    private boolean verifyCertificate;
 
     @Value("#{${sms.category.map}}")
     Map<String, Map<String, String>> categoryMap;
