@@ -175,7 +175,9 @@ public class MSDGSMSServiceImpl extends BaseSMSService {
         MessageDigest md;
         try {
             md = MessageDigest.getInstance("SHA-512");
+            log.info("mdddddddd  "+md.toString());
             md.update(hashGen.getBytes());
+            log.info("mdddddddd222222222  "+md.toString());
             byte byteData[] = md.digest();
             // convert the byte to hex format method 1
             sb = new StringBuffer();
