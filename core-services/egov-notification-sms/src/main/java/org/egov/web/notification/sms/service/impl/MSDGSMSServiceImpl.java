@@ -14,14 +14,26 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.*;
+import java.security.KeyManagementException;
 import java.security.MessageDigest;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.cert.CertificateException;
+import java.security.cert.CertificateFactory;
+import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.net.ssl.SSLContext;
 import javax.annotation.PostConstruct;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.TrustManagerFactory;
+import javax.net.ssl.X509TrustManager;
+
 
 @Service
 @Slf4j
