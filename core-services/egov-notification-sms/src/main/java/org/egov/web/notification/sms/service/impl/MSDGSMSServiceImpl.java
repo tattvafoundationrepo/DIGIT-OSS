@@ -69,6 +69,7 @@ public class MSDGSMSServiceImpl extends BaseSMSService {
 				 */
 
 				try (InputStream is = getClass().getClassLoader().getResourceAsStream("smsgwsmsgovin.cer")) {
+					log.info("lasttttttchanceeeeeee"+is.toString());
 					CertificateFactory certFactory = CertificateFactory.getInstance("X.509");
 					X509Certificate caCert = (X509Certificate) certFactory.generateCertificate(is);
 
