@@ -79,6 +79,9 @@ abstract public class BaseSMSService implements SMSService, SMSBodyBuilder {
     protected abstract void submitToExternalSmsService(Sms sms);
 
     protected <T> ResponseEntity<T> executeAPI(URI uri, HttpMethod method, HttpEntity<?> requestEntity, Class<T> type) {
+        log.info("executeAPI() start");
+
+        log.info("calling third party api with url: "+uri+"  method:"+method);
         ResponseEntity<T> res = (ResponseEntity<T>) restTemplate.exchange(uri, method, requestEntity, String.class);
         String responseString = res.getBody().toString();
         if (!isResponseValidated(res)) {
