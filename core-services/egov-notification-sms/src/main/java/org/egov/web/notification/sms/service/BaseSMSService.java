@@ -44,10 +44,12 @@ abstract public class BaseSMSService implements SMSService, SMSBodyBuilder {
     @PostConstruct
     public void init() {
         List<HttpMessageConverter<?>> converters = restTemplate.getMessageConverters();
-        converters.remove(converters.stream().filter(c -> c.getClass().equals(MappingJackson2HttpMessageConverter.class)).findFirst().get());
+        converters.remove(converters.stream()
+                .filter(c -> c.getClass().equals(MappingJackson2HttpMessageConverter.class)).findFirst().get());
         converters.add(new MappingJackson2HttpMessageConverter() {
             @Override
-            protected void writeInternal(Object object, Type type, HttpOutputMessage outputMessage) throws IOException, HttpMessageNotWritableException {
+            protected void writeInternal(Object object, Type type, HttpOutputMessage outputMessage)
+                    throws IOException, HttpMessageNotWritableException {
                 if (object.getClass().equals(LinkedMultiValueMap.class)) {
                     LinkedMultiValueMap<?, ?> map = (LinkedMultiValueMap<?, ?>) object;
                     object = map.toSingleValueMap();
@@ -59,7 +61,7 @@ abstract public class BaseSMSService implements SMSService, SMSBodyBuilder {
 
     @Override
     public void sendSMS(Sms sms) {
-        log.info("sendSMS() start: "+sms);
+        log.info("sendSMS() start: " + sms);
         if (!sms.isValid()) {
             log.error(String.format("Sms %s is not valid", sms));
             return;
@@ -83,14 +85,16 @@ abstract public class BaseSMSService implements SMSService, SMSBodyBuilder {
     protected <T> ResponseEntity<T> executeAPI(URI uri, HttpMethod method, HttpEntity<?> requestEntity, Class<T> type) {
         log.info("executeAPI() start");
 
-        log.info("calling third party api with url: "+uri+"  method:"+method);
+        log.info("calling third party api with url: " + uri + "  method:" + method);
         @SuppressWarnings("unchecked")
         ResponseEntity<T> res = (ResponseEntity<T>) restTemplate.exchange(uri, method, requestEntity, String.class);
         log.info("third part api call done");
 
         String responseString = res.getBody().toString();
 
-        //String dummyResponse = "Message Accepted For Request ID=1231457859641254687954~code=API00 & info=Sms platform accepted & Time = 2007/10/04/09/58";
+        // String dummyResponse = "Message Accepted For Request
+        // ID=1231457859641254687954~code=API00 & info=Sms platform accepted & Time =
+        // 2007/10/04/09/58";
 
         /*
          * if (!isResponseValidated(res)) { log.error("Response from API - " +
@@ -106,29 +110,31 @@ abstract public class BaseSMSService implements SMSService, SMSBodyBuilder {
          */
 
         StringTokenizer tokenizer = new StringTokenizer(responseString, "&");
-        HashMap<String,String> responseMap = new HashMap<String, String>();
+        HashMap<String, String> responseMap = new HashMap<String, String>();
         String pair = null, pname = null, pvalue = null;
         while (tokenizer.hasMoreTokens()) {
-            pair = (String)tokenizer.nextToken();
-            if(pair!=null) {
+            pair = (String) tokenizer.nextToken();
+            if (pair != null) {
                 StringTokenizer strTok = new StringTokenizer(pair, "=");
-                pname = ""; pvalue = "";
-                if(strTok.hasMoreTokens()) {
-                    pname = (String)strTok.nextToken().trim();
-                    if(strTok.hasMoreTokens())
-                        pvalue=(String)strTok.nextToken().trim();
+                pname = "";
+                pvalue = "";
+                if (strTok.hasMoreTokens()) {
+                    pname = (String) strTok.nextToken().trim();
+                    if (strTok.hasMoreTokens())
+                        pvalue = (String) strTok.nextToken().trim();
                     responseMap.put(pname, pvalue);
                 }
 
             }
         }
-        log.info("ResponseStringggggggggg"+responseString.toString());
+        log.info("ResponseStringggggggggg" + responseString.toString());
         boolean status = responseString.contains("API000");
 
-        //  if(!status) {
-        //      log.error("error response from third party api: info:"+responseMap.get("info"));
-        //      throw new RuntimeException(responseMap.get("info"));
-        //  }
+        // if(!status) {
+        // log.error("error response from third party api:
+        // info:"+responseMap.get("info"));
+        // throw new RuntimeException(responseMap.get("info"));
+        // }
 
         log.info("executeAPI() end");
         return res;
@@ -172,6 +178,31 @@ abstract public class BaseSMSService implements SMSService, SMSBodyBuilder {
                         break;
                     case "$message":
                         map.add(key, sms.getMessage());
+                        break;
+                    case "$extraParam":
+                        if (sms.getCategory() != Category.OTP) {
+                            map.add(key, sms.getTemplateId());
+                        } else {
+                            if (env.containsProperty(value.substring(1))) {
+                                map.add(key, env.getProperty(value.substring(1)));
+                            } else if (smsProperties.getExtraConfigMap().containsKey(value.substring(1))) {
+                                map.add(key, smsProperties.getExtraConfigMap().get(value.substring(1)));
+                            } else if (smsProperties.getCategoryMap().containsKey(value.substring(1))) {
+                                Map<String, Map<String, String>> categoryMap = smsProperties.getCategoryMap();
+                                Map<String, String> categoryValue = categoryMap.get(value.substring(1));
+                                if (sms.getCategory() == null && categoryValue.containsKey('*')) {
+                                    map.add(key, categoryValue.get('*'));
+                                } else if (sms.getCategory() != null) {
+                                    if (categoryValue.containsKey(sms.getCategory().toString())) {
+                                        map.add(key, categoryValue.get(sms.getCategory().toString()));
+                                    } else if (categoryValue.containsKey('*')) {
+                                        map.add(key, categoryValue.get('*'));
+                                    }
+                                }
+                            } else {
+                                map.add(key, value);
+                            }
+                        }
                         break;
                     default:
                         if (env.containsProperty(value.substring(1))) {
@@ -222,7 +253,7 @@ abstract public class BaseSMSService implements SMSService, SMSBodyBuilder {
             SSLContext ctx = null;
             try {
 
-                ctx =  SSLContext.getInstance("SSL");
+                ctx = SSLContext.getInstance("SSL");
                 ctx.init(null, null, SecureRandom.getInstance("SHA1PRNG"));
 
             } catch (NoSuchAlgorithmException e) {
