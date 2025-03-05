@@ -25,7 +25,7 @@ public class OtpService {
 
     @Autowired
     public OtpService(OtpRepository otpRepository, OtpSMSRepository otpSMSSender, OtpEmailRepository otpEmailRepository,
-                      UserRepository userRepository) {
+            UserRepository userRepository) {
         this.otpRepository = otpRepository;
         this.otpSMSSender = otpSMSSender;
         this.otpEmailRepository = otpEmailRepository;
@@ -33,11 +33,14 @@ public class OtpService {
     }
 
     public void sendOtp(OtpRequest otpRequest) {
-        otpRequest.validate();
-        if (otpRequest.isRegistrationRequestType() || otpRequest.isLoginRequestType()) {
-            sendOtpForUserRegistration(otpRequest);
-        } else {
-            sendOtpForPasswordReset(otpRequest);
+        int count = otpSMSSender.getTokenCount(otpRequest.getMobileNumber()); // added for otp flooding issue
+        if (count == 0) {
+            otpRequest.validate();
+            if (otpRequest.isRegistrationRequestType() || otpRequest.isLoginRequestType()) {
+                sendOtpForUserRegistration(otpRequest);
+            } else {
+                sendOtpForPasswordReset(otpRequest);
+            }
         }
     }
 
@@ -49,11 +52,10 @@ public class OtpService {
             throw new UserAlreadyExistInSystemException();
         else if (otpRequest.isLoginRequestType() && null == matchingUser)
             throw new UserNotExistingInSystemException();
-        int count= otpSMSSender.getTokenCount(otpRequest.getMobileNumber());   // added for otp flooding issue
-        if(count == 0){
+
         final String otpNumber = otpRepository.fetchOtp(otpRequest);
         otpSMSSender.send(otpRequest, otpNumber);
-        }
+
     }
 
     private void sendOtpForPasswordReset(OtpRequest otpRequest) {
