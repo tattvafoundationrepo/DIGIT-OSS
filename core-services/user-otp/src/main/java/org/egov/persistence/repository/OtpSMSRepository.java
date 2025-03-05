@@ -8,6 +8,7 @@ import org.egov.persistence.contract.SMSRequest;
 import org.egov.tracer.kafka.CustomKafkaTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 import org.springframework.stereotype.Service;
 
@@ -38,6 +39,9 @@ public class OtpSMSRepository {
     private LocalizationService localizationService;
 
     @Autowired
+    private JdbcTemplate jdbcTemplate;
+
+    @Autowired
     public OtpSMSRepository(CustomKafkaTemplate<String, SMSRequest> kafkaTemplate,
                             @Value("${sms.topic}") String smsTopic) {
         this.kafkaTemplate = kafkaTemplate;
@@ -61,9 +65,9 @@ public class OtpSMSRepository {
         Map<String, String> localisedMsgs = localizationService.getLocalisedMessages(tenantId, "en_IN", "egov-user");
         if (localisedMsgs.isEmpty()) {
             log.info("Localization Service didn't return any msgs so using default...");
-            localisedMsgs.put(LOCALIZATION_KEY_REGISTER_SMS, "Dear Citizen, Your OTP to complete your mSeva Registration is %s.");
-            localisedMsgs.put(LOCALIZATION_KEY_LOGIN_SMS, "Dear Citizen, Your Login OTP is %s.");
-            localisedMsgs.put(LOCALIZATION_KEY_PWD_RESET_SMS, "Dear Citizen, Your OTP for recovering password is %s.");
+            localisedMsgs.put(LOCALIZATION_KEY_REGISTER_SMS, "प्रिय नागरिकांनो, BMC सिटिझन सर्व्हिसेसमध्ये लॉग इन करण्यासाठी OTP %s आहे. हा OTP 5 मिनिटांसाठी वैध आहे. कृपया, कोणाशीही शेअर करू नका.आभार, BMC महाराष्ट्र");
+            localisedMsgs.put(LOCALIZATION_KEY_LOGIN_SMS, "प्रिय नागरिकांनो, BMC सिटिझन सर्व्हिसेसमध्ये लॉग इन करण्यासाठी OTP %s आहे. हा OTP 5 मिनिटांसाठी वैध आहे. कृपया, कोणाशीही शेअर करू नका.आभार, BMC महाराष्ट्र");
+            localisedMsgs.put(LOCALIZATION_KEY_PWD_RESET_SMS, "प्रिय नागरिकांनो, BMC सिटिझन सर्व्हिसेसमध्ये लॉग इन करण्यासाठी OTP %s आहे. हा OTP 5 मिनिटांसाठी वैध आहे. कृपया, कोणाशीही शेअर करू नका.आभार, BMC महाराष्ट्र");
         }
         String message = null;
 
@@ -114,4 +118,24 @@ public class OtpSMSRepository {
             return tenantId;                                                              // handled case if tenantIdStripSuffixCount    
                                                                                           // is less than or equal to 0
         }
+
+
+        // added for otp flooding issue
+        public int getTokenCount(String tokenIdentity) {
+            String sql = 
+                "WITH data AS ( " +
+                "    SELECT createddate, " +
+                "           rank() OVER (PARTITION BY tokenidentity ORDER BY createddate DESC) AS rnk " +
+                "    FROM public.eg_token " +
+                "    WHERE tokenidentity = ? " +
+                "          AND DATE(createddate) = CURRENT_DATE " +
+                ") " +
+                "SELECT COUNT(*) " +
+                "FROM data " +
+                "WHERE rnk = 3 " +
+                "      AND (NOW() AT TIME ZONE 'Asia/Kolkata') < (createddate + INTERVAL '5 minute');";
+        
+            return jdbcTemplate.queryForObject(sql, Integer.class, tokenIdentity);
+        }
+        
 }
