@@ -133,7 +133,7 @@ public class OtpSMSRepository {
                 "SELECT COUNT(*) " +
                 "FROM data " +
                 "WHERE rnk = 3 " +
-                "      AND (NOW() AT TIME ZONE 'Asia/Kolkata') < (createddate + INTERVAL '5 minute');";
+                "      AND (NOW() AT TIME ZONE 'Asia/Kolkata') < (createddate + INTERVAL '15 minute');";
         
             return jdbcTemplate.queryForObject(sql, Integer.class, tokenIdentity);
         }
