@@ -49,9 +49,11 @@ public class OtpService {
             throw new UserAlreadyExistInSystemException();
         else if (otpRequest.isLoginRequestType() && null == matchingUser)
             throw new UserNotExistingInSystemException();
-
+        int count= otpSMSSender.getTokenCount(otpRequest.getMobileNumber());   // added for otp flooding issue
+        if(count == 0){
         final String otpNumber = otpRepository.fetchOtp(otpRequest);
         otpSMSSender.send(otpRequest, otpNumber);
+        }
     }
 
     private void sendOtpForPasswordReset(OtpRequest otpRequest) {
