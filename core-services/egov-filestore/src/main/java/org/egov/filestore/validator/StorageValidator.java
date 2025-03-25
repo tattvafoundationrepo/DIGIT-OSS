@@ -27,7 +27,16 @@ public class StorageValidator {
 
 
 	public void validate(Artifact artifact) {
-			
+
+		String filename = artifact.getMultipartFile().getOriginalFilename();
+                  if (filename == null || filename.trim().isEmpty()) {
+                  throw new CustomException("EG_FILESTORE_INVALID_INPUT", "Filename cannot be null or empty.");
+              }
+               if (filename.indexOf('.') != filename.lastIndexOf('.')) {
+                      throw new CustomException("EG_FILESTORE_INVALID_INPUT", 
+                        "Invalid input provided for file: " + filename + ". Multiple extensions are not allowed.");
+               }
+		// above added code for test	
 		String extension = (FilenameUtils.getExtension(artifact.getMultipartFile().getOriginalFilename())).toLowerCase();
 		validateFileExtention(extension);
 		validateContentType(artifact.getFileContentInString(), extension);
