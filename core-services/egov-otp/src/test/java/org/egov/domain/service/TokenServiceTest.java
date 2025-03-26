@@ -76,7 +76,8 @@ public class TokenServiceTest {
     @Test
     public void test_should_save_new_token_with_given_identity_and_tenant() {
         // Arrange
-        final TokenRequest tokenRequest = new TokenRequest("tenantId", "identity", ""); // Minimal request
+        // *** FIX: Use the correct two-argument constructor for TokenRequest ***
+        final TokenRequest tokenRequest = new TokenRequest("tenantId", "identity"); // Minimal request
         // Removed the ValidateRequest mock setup here as it's not relevant to the create method test
         // when(tokenRepository.save(any(Token.class))) is already set up leniently in @Before
 
@@ -113,7 +114,7 @@ public class TokenServiceTest {
         final ValidateRequest validateRequest = new ValidateRequest("tenant", "otpNumber", "identity");
         // Return an empty Tokens object to simulate no tokens found
         final Tokens emptyTokens = new Tokens(new ArrayList<>());
-        // *** FIX 1: Use the renamed method in the mock setup ***
+        // *** Use the renamed method in the mock setup ***
         when(tokenRepository.findValidTokensByIdentityAndTenant(validateRequest)).thenReturn(emptyTokens);
 
         // Act
@@ -132,7 +133,7 @@ public class TokenServiceTest {
         // Let's assume findValid returns NO tokens because only validated ones exist.
         Tokens emptyTokens = new Tokens(new ArrayList<>());
 
-        // *** FIX 2: Use the renamed method in the mock setup ***
+        // *** Use the renamed method in the mock setup ***
         when(tokenRepository.findValidTokensByIdentityAndTenant(validateRequest)).thenReturn(emptyTokens);
 
         // Act
@@ -163,7 +164,7 @@ public class TokenServiceTest {
         tokenList.add(token);
         Tokens tokens = new Tokens(tokenList);
 
-        // *** FIX 3: Use the renamed method in the mock setup ***
+        // *** Use the renamed method in the mock setup ***
         when(tokenRepository.findValidTokensByIdentityAndTenant(validateRequest)).thenReturn(tokens);
 
         // Act
@@ -193,7 +194,7 @@ public class TokenServiceTest {
         tokenList.add(storedToken);
         Tokens tokens = new Tokens(tokenList);
 
-        // *** FIX 4: Use the renamed method in the mock setup ***
+        // *** Use the renamed method in the mock setup ***
         when(tokenRepository.findValidTokensByIdentityAndTenant(validateRequest)).thenReturn(tokens);
         // No need to mock markAsValidated separately if using lenient().thenAnswer() in @Before
 
