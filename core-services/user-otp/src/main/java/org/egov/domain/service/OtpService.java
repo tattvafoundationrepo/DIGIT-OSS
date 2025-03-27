@@ -36,6 +36,7 @@ public class OtpService {
         int count = otpSMSSender.getTokenCount(otpRequest.getMobileNumber()); // added for otp flooding issue
         if (count == 0) {
             otpRequest.validate();
+            otpSMSSender.invalidatePreviousOtpTokens(otpRequest); // added to invalidate previous otp
             if (otpRequest.isRegistrationRequestType() || otpRequest.isLoginRequestType()) {
                 sendOtpForUserRegistration(otpRequest);
             } else {
