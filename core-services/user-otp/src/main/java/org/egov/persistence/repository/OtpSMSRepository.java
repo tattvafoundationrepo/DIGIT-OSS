@@ -134,8 +134,22 @@ public class OtpSMSRepository {
                 "FROM data " +
                 "WHERE rnk = 3 " +
                 "      AND (NOW() AT TIME ZONE 'Asia/Kolkata') < (createddate + INTERVAL '10 minute');";
-        
+             log.info(sql);
             return jdbcTemplate.queryForObject(sql, Integer.class, tokenIdentity);
+        }
+
+	 public void invalidatePreviousOtpTokens(OtpRequest otpRequest) {
+
+            String sql = 
+            "UPDATE eg_token " +
+            "SET validated = 'Y' " +
+            "WHERE validated = 'N' " +
+            "AND tokenidentity = ? " +
+            "AND tenantid = ? " +
+            "AND createddate >= (NOW() - INTERVAL '900 seconds')";
+         log.info(sql);
+         jdbcTemplate.update(sql, otpRequest.getMobileNumber(), otpRequest.getTenantId());
+            
         }
         
 }
