@@ -105,45 +105,53 @@ public class StorageValidator {
 		}
 	
 		List<Pattern> maliciousPatterns = Arrays.asList(
-			Pattern.compile("(?i)<script>.*?</script>"),
-			Pattern.compile("(?i)document\\.cookie"), 
-			Pattern.compile("(?i)document\\.write\\("), 
-			Pattern.compile("(?i)window\\.location"), 
-			Pattern.compile("(?i)javascript:\\s*"), 
-			Pattern.compile("(?i)onerror\\s*=\\s*"), 
-			Pattern.compile("(?i)alert\\s*\\(.*?\\)"), 
-			Pattern.compile("(?i)eval\\(.*?\\)"), 
-			Pattern.compile("(?i)onload\\s*=\\s*"), 
-			Pattern.compile("(?i)iframe\\s*src\\s*=\\s*"), 
-			Pattern.compile("(?i)(union.*?select|drop\\s+table|delete\\s+from)"), 
-			Pattern.compile("(?i)(--|#|;|\\*/|\\*/--)"), 
-			Pattern.compile("(?i)(select\\s+.*?from\\s+.*?where)"), 
-			Pattern.compile("(?i)(insert\\s+into\\s+.*?values)"), 
-			Pattern.compile("(?i)(update\\s+.*?set\\s+.*?where)"), 
-			Pattern.compile("(?i)(exec\\s*\\(|cmd.exe|powershell.exe|bash -c|sh -c)"), 
-			Pattern.compile("(?i)(system\\(|popen\\(|proc_open\\(|shell_exec\\()"), 
-			Pattern.compile("(?i)(;\\s*rm\\s*-rf\\s*/|;\\s*shutdown\\s*-h\\s*now)"), 
-			Pattern.compile("(?i)(nc\\s*-e\\s*|netcat\\s*|socat\\s*)"), 
-			Pattern.compile("(?i)(wget\\s+http|curl\\s+-o)"), 
-			Pattern.compile("(?i)base64_decode\\("), 
-			Pattern.compile("(?i)assert\\s*\\("), 
-			Pattern.compile("(?i)preg_replace\\s*\\(.*?\\/e"), 
-			Pattern.compile("(?i)phpinfo\\s*\\("), 
-			Pattern.compile("(?i)system\\s*\\("), 
-			Pattern.compile("(?i)(\\.\\./|/etc/passwd|/proc/self)"), 
-			Pattern.compile("(?i)(http:\\/\\/|https:\\/\\/).*?\\.php"), 
-			Pattern.compile("(?i)(php:\\/\\/input|data:\\/\\/text)"), 
-			Pattern.compile("(?i)\\{\\s*\\$where\\s*:\\s*"), 
-			Pattern.compile("(?i)db\\.getCollection\\("), 
-			Pattern.compile("(?i)db\\.runCommand\\("), 
-			Pattern.compile("(?i)\\.php$|\\.jsp$|\\.asp$|\\.exe$|\\.sh$|\\.bat$|\\.cmd$"), 
-			Pattern.compile("(?i)(x-forwarded-for|x-real-ip|client-ip):\\s*"), 
-			Pattern.compile("(?i)(metadata.google.internal|169.254.169.254)"), 
-			Pattern.compile("(?i)(Runtime\\.getRuntime\\(\\))"), 
-			Pattern.compile("(?i)ProcessBuilder\\s*\\("), 
-			Pattern.compile("(?i)Class\\.forName\\("), 
-			Pattern.compile("(?i)Method\\.invoke\\(") 
-		);
+    // 🔍 SQL Injection Detection
+    Pattern.compile("(?i)(union.*?select|drop\\s+table|delete\\s+from)"), 
+    Pattern.compile("(?i)(--|#|;|\\*/|\\*/--)"), 
+    Pattern.compile("(?i)(select\\s+.*?from\\s+.*?where)"), 
+    Pattern.compile("(?i)(insert\\s+into\\s+.*?values)"), 
+    Pattern.compile("(?i)(update\\s+.*?set\\s+.*?where)"), 
+    Pattern.compile("(?i)\\{\\s*\\$where\\s*:\\s*"), 
+    Pattern.compile("(?i)db\\.getCollection\\("), 
+    Pattern.compile("(?i)db\\.runCommand\\("),
+
+    // 🔍 XSS (Cross-Site Scripting) Detection
+    Pattern.compile("(?i)<script>.*?</script>"), 
+    Pattern.compile("(?i)document\\.cookie"), 
+    Pattern.compile("(?i)document\\.write\\("), 
+    Pattern.compile("(?i)window\\.location"), 
+    Pattern.compile("(?i)javascript:\\s*"), 
+    Pattern.compile("(?i)onerror\\s*=\\s*"), 
+    Pattern.compile("(?i)alert\\s*\\(.*?\\)"), 
+    Pattern.compile("(?i)eval\\(.*?\\)"), 
+    Pattern.compile("(?i)onload\\s*=\\s*"), 
+    Pattern.compile("(?i)iframe\\s*src\\s*=\\s*"),
+
+    // 🔍 JavaScript & PHP Execution Detection
+    Pattern.compile("(?i)base64_decode\\("),  // PHP execution
+    Pattern.compile("(?i)assert\\s*\\("),  // PHP execution
+    Pattern.compile("(?i)preg_replace\\s*\\(.*?\\/e"), // PHP eval injection
+    Pattern.compile("(?i)phpinfo\\s*\\("), // PHP function exposure
+    Pattern.compile("(?i)system\\s*\\("), // PHP system command execution
+    Pattern.compile("(?i)(php:\\/\\/input|data:\\/\\/text)"),  // PHP payloads
+    Pattern.compile("(?i)document\\.getElementById\\("),  // JavaScript DOM manipulation
+    Pattern.compile("(?i)setTimeout\\s*\\("),  // Potential JavaScript delayed execution
+    Pattern.compile("(?i)Function\\s*\\("),  // JavaScript dynamic function execution
+    Pattern.compile("(?i)fetch\\s*\\("),  // JavaScript network request
+    Pattern.compile("(?i)XMLHttpRequest"),  // JavaScript AJAX request
+    Pattern.compile("(?i)WebSocket\\s*\\("),  // JavaScript WebSocket
+
+    // 🔍 Remote Command Execution (RCE)
+    Pattern.compile("(?i)(exec\\s*\\(|cmd.exe|powershell.exe|bash -c|sh -c)"), 
+    Pattern.compile("(?i)(system\\(|popen\\(|proc_open\\(|shell_exec\\()"), 
+    Pattern.compile("(?i)(Runtime\\.getRuntime\\(\\))"), 
+    Pattern.compile("(?i)ProcessBuilder\\s*\\("), 
+    Pattern.compile("(?i)Class\\.forName\\("), 
+    Pattern.compile("(?i)Method\\.invoke\\("),
+
+    // 🔍 Malicious File Uploads (Executable & Script Files)
+    Pattern.compile("(?i)\\.php$|\\.jsp$|\\.asp$|\\.exe$|\\.sh$|\\.bat$|\\.cmd$|\\.py$|\\.rb$|\\.ps1$|\\.vbs$")
+);
 	
 		try (BufferedReader reader = new BufferedReader(
 				new InputStreamReader(artifact.getMultipartFile().getInputStream()))) {
