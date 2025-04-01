@@ -140,11 +140,17 @@ public class TokenRepository {
         tokenInputs.put("tokenIdentity", request.getIdentity());
         tokenInputs.put("tenantId", request.getTenantId());
 
+        log.info("tokenIdentity ------------------" + request.getIdentity());
+        log.info("tenantId -----------------------" + request.getTenantId());
+
         List<Token> domainTokens = namedParameterJdbcTemplate.query(
                 GET_VALID_TOKENS_BY_IDENTITY_TENANT, // Use the correct query name
                 tokenInputs,
                 new TokenRowMapper());
-
+         domainTokens.forEach(token -> {
+            log.info(token.getIdentity().toString()+"  from dbbbbbbbbbbbbbbbbbbbbbbbbbbb  ");        
+        });        
+       
         log.debug("Found {} valid tokens for identity: {} and tenant: {}",
                 domainTokens.size(), request.getIdentity(), request.getTenantId());
 
