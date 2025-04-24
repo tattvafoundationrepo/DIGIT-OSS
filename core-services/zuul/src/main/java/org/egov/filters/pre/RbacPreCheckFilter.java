@@ -47,7 +47,7 @@ public class RbacPreCheckFilter extends ZuulFilter {
     public Object run() {
         if ((openEndpointsWhitelist.contains(getRequestURI())
             || anonymousEndpointsWhitelist.contains(getRequestURI()))) {
-            setShouldDoRbac(false);
+            setShouldDoRbac(true);
             logger.info(SKIP_RBAC, getRequestURI());
             return null;
         }
