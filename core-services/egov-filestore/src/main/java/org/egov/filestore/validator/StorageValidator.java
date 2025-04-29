@@ -74,7 +74,7 @@ public class StorageValidator {
 
     private void scanFileForMaliciousContent(Artifact artifact) {
         MultipartFile file = artifact.getMultipartFile();
-        validateImageIntegrity(file);
+   //     validateImageIntegrity(file);
         if (file.getSize() > MAX_IMAGE_SIZE) {
             throw new CustomException("EG_FILESTORE_INVALID_SIZE", "File size exceeds 5MB.");
         }
