@@ -1,5 +1,6 @@
 package org.egov.web.notification.mail.consumer.contract;
 
+import java.util.List;
 import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -20,9 +21,11 @@ import lombok.Setter;
 public class Email {
 
 	private Set<String> emailTo;
+	private Set<String> emailCc;
 	private String subject;
 	private String body;
 	@JsonProperty("isHTML")
 	private boolean isHTML;
-
+	@JsonProperty("attachments")
+	private List<EmailAttachment> attachments;
 }
