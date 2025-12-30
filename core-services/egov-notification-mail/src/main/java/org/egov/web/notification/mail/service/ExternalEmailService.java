@@ -1,10 +1,18 @@
 package org.egov.web.notification.mail.service;
 
+import java.util.Base64;
+
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
+import javax.mail.util.ByteArrayDataSource;
 
+import org.egov.web.notification.mail.config.EmailProperties;
 import org.egov.web.notification.mail.consumer.contract.Email;
+import org.egov.web.notification.mail.consumer.contract.EmailAttachment;
+import org.egov.web.notification.mail.consumer.contract.EmailRequest;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -41,18 +49,65 @@ public class ExternalEmailService implements EmailService {
 		mailSender.send(mailMessage);
 	}
 
-	private void sendHTMLEmail(Email email) {
-		MimeMessage message = mailSender.createMimeMessage();
-		MimeMessageHelper helper;
+	
+	// private void sendHTMLEmail(Email email) {
+	// 	MimeMessage message = mailSender.createMimeMessage();
+	// 	MimeMessageHelper helper;
+	// 	try {
+	// 		helper = new MimeMessageHelper(message, true, "UTF-8");
+
+	// 		// ADD THIS - Set FROM address
+	// 		helper.setFrom(emailProperties.getMailFrom());
+
+	// 		helper.setTo(email.getEmailTo().toArray(new String[0]));
+	// 		helper.setSubject(email.getSubject());
+	// 		helper.setText(email.getBody(), true);
+
+	// 		mailSender.send(message);
+	// 		log.info("✅ HTML email sent successfully");
+	// 	} catch (MessagingException e) {
+	// 		log.error(EXCEPTION_MESSAGE, e);
+	// 		throw new RuntimeException("Failed to send HTML email: " + e.getMessage(), e);
+	// 	}
+	// }
+	public void sendHTMLEmail(Email email) {
 		try {
-			helper = new MimeMessageHelper(message, true);
+			MimeMessage message = mailSender.createMimeMessage();
+			MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+			helper.setFrom(emailProperties.getMailFrom());
 			helper.setTo(email.getEmailTo().toArray(new String[0]));
+
+			// IMPORTANT: Add the CC logic here
+			if (email.getEmailCc() != null && !email.getEmailCc().isEmpty()) {
+				helper.setCc(email.getEmailCc().toArray(new String[0]));
+			}
 			helper.setSubject(email.getSubject());
-			helper.setText(email.getBody(), true);
-		} catch (MessagingException e) {
-			log.error(EXCEPTION_MESSAGE, e);
-			throw new RuntimeException(e);
+
+			// Use the isHTML flag from the contract
+			helper.setText(email.getBody(), email.isHTML());
+
+			// CRITICAL: This is the part that was missing in your text/html methods
+			if (email.getAttachments() != null && !email.getAttachments().isEmpty()) {
+				log.info("📎 Found {} attachment(s). Processing...", email.getAttachments().size());
+				for (EmailAttachment attachment : email.getAttachments()) {
+					// Decode the Base64 data from Kafka
+					byte[] decodedBytes = Base64.getDecoder().decode(attachment.getData());
+
+					helper.addAttachment(
+							attachment.getName(),
+							new ByteArrayResource(decodedBytes),
+							attachment.getMimeType());
+				}
+			}
+
+			mailSender.send(message);
+			log.info("✅ Email sent successfully with attachments!");
+
+		} catch (Exception e) {
+			log.error("❌ Error sending email: ", e);
+			throw new RuntimeException("Failed to send email", e);
 		}
-		mailSender.send(message);
 	}
+
 }
