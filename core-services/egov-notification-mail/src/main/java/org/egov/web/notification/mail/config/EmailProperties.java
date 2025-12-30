@@ -78,4 +78,8 @@ public class EmailProperties {
     @Value("${mail.smtps.debug}")
     @Getter
     private String mailSmtpsDebug;
+    
+    @Value("${mail.from}")
+    @Getter
+    private String mailFrom;
 }
