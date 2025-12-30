@@ -29,6 +29,9 @@ public class ExternalEmailService implements EmailService {
 	public static final String EXCEPTION_MESSAGE = "Exception creating HTML email";
 	private JavaMailSenderImpl mailSender;
 
+	@Autowired
+	private EmailProperties emailProperties;
+
     public ExternalEmailService(JavaMailSenderImpl mailSender) {
         this.mailSender = mailSender;
     }
