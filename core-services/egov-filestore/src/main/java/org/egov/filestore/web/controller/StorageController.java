@@ -3,7 +3,10 @@ package org.egov.filestore.web.controller;
 import static org.springframework.http.MediaType.APPLICATION_JSON_UTF8_VALUE;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.security.MessageDigest;
 import java.util.ArrayList;
+import java.util.Formatter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -99,9 +102,21 @@ public class StorageController {
 			@RequestParam(value = "tenantId") String tenantId,
 			@RequestParam(value = "module", required = true) String module,
 			@RequestParam(value = "tag", required = false) String tag,
-			@RequestParam(value = "requestInfo", required = false) String requestInfo
+			@RequestParam(value = "requestInfo", required = false) String requestInfo,
+			@RequestParam(value = "checksum", required = false) String checksum
 			) {
 		RequestInfo reqInfo = storageUtil.getRequestInfo(requestInfo);
+		if (checksum != null) {
+			try {
+				for (MultipartFile file : files) {
+					if (!matchChecksum(file, checksum)) {
+						throw new RuntimeException("Checksum mismatch for file: " + file.getOriginalFilename());
+					}
+				}
+			} catch (Exception e) {
+				throw new RuntimeException("Error verifying checksum for files", e);
+			}
+		}
 		final List<String> fileStoreIds = storageService.save(files, module, tag, tenantId, reqInfo);
 		return getStorageResponse(fileStoreIds, tenantId);
 	}
@@ -135,5 +150,34 @@ public class StorageController {
 		
 		return new ResponseEntity<>(responseMap, HttpStatus.OK);
 	}
+
+
+
+	public static String calculateChecksum(MultipartFile file) throws Exception {
+        MessageDigest digest = MessageDigest.getInstance("SHA-256");
+        try (InputStream fis = file.getInputStream()) {
+            byte[] byteArray = new byte[1024];
+            int bytesRead;
+            while ((bytesRead = fis.read(byteArray)) != -1) {
+                digest.update(byteArray, 0, bytesRead);
+            }
+        }
+        return bytesToHex(digest.digest());
+    }
+
+    private static String bytesToHex(byte[] bytes) {
+        Formatter formatter = new Formatter();
+        for (byte b : bytes) {
+            formatter.format("%02x", b);
+        }
+        String result = formatter.toString();
+        formatter.close();
+        return result;
+    }
+
+    public static boolean matchChecksum(MultipartFile file, String expectedChecksum) throws Exception {
+        String calculatedChecksum = calculateChecksum(file);
+        return calculatedChecksum.equalsIgnoreCase(expectedChecksum);
+    }
 	
 }
