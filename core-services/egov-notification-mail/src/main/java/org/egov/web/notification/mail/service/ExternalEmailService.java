@@ -102,7 +102,7 @@ public class ExternalEmailService implements EmailService {
 			}
 			helper.setSubject(email.getSubject());
 
-			boolean isHtml = email.isHTML();
+			boolean isHtml = false;
 			helper.setText(email.getBody(), isHtml);
 
 			log.info("📧 Email type: {}", isHtml ? "HTML" : "Plain Text");
