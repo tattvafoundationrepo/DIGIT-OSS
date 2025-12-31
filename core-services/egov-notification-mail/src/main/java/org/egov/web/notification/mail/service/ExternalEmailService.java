@@ -35,19 +35,17 @@ public class ExternalEmailService implements EmailService {
 		this.mailSender = mailSender;
 	}
 
-	// @Override
-	// public void sendEmail(Email email) {
-	// log.info("📧 Attempting to send email to: {}", email.getEmailTo());
-	// log.info("📧 Subject: {}", email.getSubject());
+	@Override
+	public void sendEmail(Email email) {
+		log.info("📧 Attempting to send email to: {}", email.getEmailTo());
+		log.info("📧 Subject: {}", email.getSubject());
 
-	// if (email.isHTML()) {
-	// sendHTMLEmail(email);
-	// } else {
-	// sendTextEmail(email);
-	// }
-
-	// log.info("✅ Email sent successfully!");
-	// }
+		if (email.isHTML()) {
+			sendHTMLEmail(email);
+		} else {
+			sendTextEmail(email);
+		}
+	}
 
 	private void sendTextEmail(Email email) {
 		try {
@@ -68,44 +66,39 @@ public class ExternalEmailService implements EmailService {
 		}
 	}
 
-	private void sendHTMLEmail(Email email) {
-		MimeMessage message = mailSender.createMimeMessage();
-		MimeMessageHelper helper;
-		try {
-			helper = new MimeMessageHelper(message, true, "UTF-8");
+	// private void sendHTMLEmail(Email email) {
+	// 	MimeMessage message = mailSender.createMimeMessage();
+	// 	MimeMessageHelper helper;
+	// 	try {
+	// 		helper = new MimeMessageHelper(message, true, "UTF-8");
 
-			// ADD THIS - Set FROM address
-			helper.setFrom(emailProperties.getMailFrom());
+	// 		// ADD THIS - Set FROM address
+	// 		helper.setFrom(emailProperties.getMailFrom());
 
-			helper.setTo(email.getEmailTo().toArray(new String[0]));
-			helper.setSubject(email.getSubject());
-			helper.setText(email.getBody(), true);
+	// 		helper.setTo(email.getEmailTo().toArray(new String[0]));
+	// 		helper.setSubject(email.getSubject());
+	// 		helper.setText(email.getBody(), true);
 
-			mailSender.send(message);
-			log.info("✅ HTML email sent successfully");
-		} catch (MessagingException e) {
-			log.error(EXCEPTION_MESSAGE, e);
-			throw new RuntimeException("Failed to send HTML email: " + e.getMessage(), e);
-		}
-	}
+	// 		mailSender.send(message);
+	// 		log.info("✅ HTML email sent successfully");
+	// 	} catch (MessagingException e) {
+	// 		log.error(EXCEPTION_MESSAGE, e);
+	// 		throw new RuntimeException("Failed to send HTML email: " + e.getMessage(), e);
+	// 	}
+	// }
 
-	@Override
-	public void sendEmail(Email email) {
-		log.info("📧 Attempting to send email to: {}", email.getEmailTo());
-		log.info("📧 Subject: {}", email.getSubject());
-
+	public void sendHTMLEmail(Email email) {
 		try {
 			MimeMessage message = mailSender.createMimeMessage();
-			// Set 'true' to indicate multipart message (required for attachments)
 			MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
 			helper.setFrom(emailProperties.getMailFrom());
 			helper.setTo(email.getEmailTo().toArray(new String[0]));
 
 			// IMPORTANT: Add the CC logic here
-        if (email.getEmailCc() != null && !email.getEmailCc().isEmpty()) {
-            helper.setCc(email.getEmailCc().toArray(new String[0]));
-        }
+			if (email.getEmailCc() != null && !email.getEmailCc().isEmpty()) {
+				helper.setCc(email.getEmailCc().toArray(new String[0]));
+			}
 			helper.setSubject(email.getSubject());
 
 			// Use the isHTML flag from the contract

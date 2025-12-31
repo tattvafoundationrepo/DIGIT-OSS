@@ -31,8 +31,9 @@ public class GraphReader {
 
         graph = new DefaultDirectedGraph<>(DefaultEdge.class);
         try {
-            inputStream = GraphReader.class.getResourceAsStream("GRAPH_ADJACENCY_LIST.csv");
+            inputStream = GraphReader.class.getResourceAsStream("/GRAPH_ADJACENCY_LIST.csv");
             csvImporter.importGraph(graph, inputStream);
+            log.info("File Location-------------------------------------------//////////////////////"+inputStream);
         }
         catch (Exception e) {
             log.error("Exception while fetching file" , e);

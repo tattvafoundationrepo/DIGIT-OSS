@@ -48,74 +48,74 @@ public class MSDGSMSServiceImpl extends BaseSMSService {
 
     @Autowired
     private SMSBodyBuilder bodyBuilder;
-    
+
     private SSLContext sslContext;
 
     @PostConstruct
-	private void postConstruct() {
-		log.info("postConstruct() start");
-		try {
-			sslContext = SSLContext.getInstance("TLSv1.2");
-			if (smsProperties.isVerifyCertificate()) {
-				log.info("checking certificate");
-				/*
-				 * KeyStore trustStore = KeyStore.getInstance(KeyStore.getDefaultType()); //File
-				 * file = new File(System.getenv("JAVA_HOME")+"/lib/security/cacerts"); File
-				 * file = ResourceUtils.getFile("classpath:smsgwsmsgovin.cer"); InputStream is =
-				 * new FileInputStream(file); trustStore.load(is, "changeit".toCharArray());
-				 * TrustManagerFactory trustFactory = TrustManagerFactory
-				 * .getInstance(TrustManagerFactory.getDefaultAlgorithm());
-				 * trustFactory.init(trustStore);
-				 * 
-				 * TrustManager[] trustManagers = trustFactory.getTrustManagers();
-				 * sslContext.init(null, trustManagers, null);
-				 */
+    private void postConstruct() {
+        log.info("postConstruct() start");
+        try {
+            sslContext = SSLContext.getInstance("TLSv1.2");
+            if (smsProperties.isVerifyCertificate()) {
+                log.info("checking certificate");
+                /*
+                 * KeyStore trustStore = KeyStore.getInstance(KeyStore.getDefaultType()); //File
+                 * file = new File(System.getenv("JAVA_HOME")+"/lib/security/cacerts"); File
+                 * file = ResourceUtils.getFile("classpath:smsgwsmsgovin.cer"); InputStream is =
+                 * new FileInputStream(file); trustStore.load(is, "changeit".toCharArray());
+                 * TrustManagerFactory trustFactory = TrustManagerFactory
+                 * .getInstance(TrustManagerFactory.getDefaultAlgorithm());
+                 * trustFactory.init(trustStore);
+                 * 
+                 * TrustManager[] trustManagers = trustFactory.getTrustManagers();
+                 * sslContext.init(null, trustManagers, null);
+                 */
 
-				try (InputStream is = getClass().getClassLoader().getResourceAsStream("smsgwsmsgovin.cer")) {
-                    log.info("lasttttttchanceeeeeee"+is.toString());
-					CertificateFactory certFactory = CertificateFactory.getInstance("X.509");
-					X509Certificate caCert = (X509Certificate) certFactory.generateCertificate(is);
+                try (InputStream is = getClass().getClassLoader().getResourceAsStream("smsgwsmsgovin.cer")) {
+                    log.info("lasttttttchanceeeeeee" + is.toString());
+                    CertificateFactory certFactory = CertificateFactory.getInstance("X.509");
+                    X509Certificate caCert = (X509Certificate) certFactory.generateCertificate(is);
 
-					KeyStore trustStore = KeyStore.getInstance(KeyStore.getDefaultType());
-					trustStore.load(null);
-					trustStore.setCertificateEntry("caCert", caCert);
+                    KeyStore trustStore = KeyStore.getInstance(KeyStore.getDefaultType());
+                    trustStore.load(null);
+                    trustStore.setCertificateEntry("caCert", caCert);
 
-					TrustManagerFactory trustFactory = TrustManagerFactory
-							.getInstance(TrustManagerFactory.getDefaultAlgorithm());
-					trustFactory.init(trustStore);
+                    TrustManagerFactory trustFactory = TrustManagerFactory
+                            .getInstance(TrustManagerFactory.getDefaultAlgorithm());
+                    trustFactory.init(trustStore);
 
-					TrustManager[] trustManagers = trustFactory.getTrustManagers();
-					sslContext.init(null, trustManagers, null);
-				} catch (KeyManagementException | IllegalStateException | CertificateException | KeyStoreException | IOException e) {
-					log.error("Not able to load SMS certificate from the specified path {}", e.getMessage());
-				}
-			} else {
-				log.info("not checking certificate");
-				TrustManager tm = new X509TrustManager() {
-					@Override
-					public void checkClientTrusted(java.security.cert.X509Certificate[] chain, String authType)
-							throws java.security.cert.CertificateException {
-					}
+                    TrustManager[] trustManagers = trustFactory.getTrustManagers();
+                    sslContext.init(null, trustManagers, null);
+                } catch (KeyManagementException | IllegalStateException | CertificateException | KeyStoreException
+                        | IOException e) {
+                    log.error("Not able to load SMS certificate from the specified path {}", e.getMessage());
+                }
+            } else {
+                log.info("not checking certificate");
+                TrustManager tm = new X509TrustManager() {
+                    @Override
+                    public void checkClientTrusted(java.security.cert.X509Certificate[] chain, String authType)
+                            throws java.security.cert.CertificateException {
+                    }
 
-					@Override
-					public void checkServerTrusted(java.security.cert.X509Certificate[] chain, String authType)
-							throws java.security.cert.CertificateException {
-					}
+                    @Override
+                    public void checkServerTrusted(java.security.cert.X509Certificate[] chain, String authType)
+                            throws java.security.cert.CertificateException {
+                    }
 
-					@Override
-					public java.security.cert.X509Certificate[] getAcceptedIssuers() {
-						return null;
-					}
-				};
-				sslContext.init(null, new TrustManager[] { tm }, null);
-			}
-			SSLContext.setDefault(sslContext);
+                    @Override
+                    public java.security.cert.X509Certificate[] getAcceptedIssuers() {
+                        return null;
+                    }
+                };
+                sslContext.init(null, new TrustManager[] { tm }, null);
+            }
+            SSLContext.setDefault(sslContext);
 
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
-
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 
 
 
@@ -181,7 +181,7 @@ public class MSDGSMSServiceImpl extends BaseSMSService {
         final MultiValueMap<String, String> requestBody = bodyBuilder.getSmsRequestBody(sms);
         postProcessor(requestBody);
         HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(requestBody, getHttpHeaders());
-        log.info("RRRRRRRRRRRRRRRRRRRRRRRRRRRR"+request.toString());
+        log.info("RRRRRRRRRRRRRRRRRRRRRRRRRRRR" + request.toString());
         executeAPI(URI.create(url), HttpMethod.POST, request, String.class);
     }
 
@@ -196,15 +196,18 @@ public class MSDGSMSServiceImpl extends BaseSMSService {
         String username = requestBody.getFirst(configMap.get(SMSConstants.SENDER_USERNAME_IDENTIFIER));
         String senderid = requestBody.getFirst(configMap.get(SMSConstants.SENDER_SENDERID_IDENTIFIER));
         String message = requestBody.getFirst(configMap.get(SMSConstants.SENDER_MESSAGE_IDENTIFIER));
-        String secureKey = requestBody.getFirst(configMap.get(SMSConstants.SENDER_SECUREKEY_IDENTIFIER));
-       // sendUnicodeOtpSMS(username,password,message,senderid,"7809840269","a75b07c8-4102-42ad-ab30-f64cf00cfb35","1007088680728172681");
+        // String secureKey =
+        // requestBody.getFirst(configMap.get(SMSConstants.SENDER_SECUREKEY_IDENTIFIER));
+        String secureKey = smsProperties.getSecureKey();
+
+        // sendUnicodeOtpSMS(username,password,message,senderid,"7809840269","a75b07c8-4102-42ad-ab30-f64cf00cfb35","1007088680728172681");
         String encryptedPwd = MD5(password);
         String hashMsg = hashGenerator(username, senderid, message, secureKey);
-        log.info("uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu"+username);
-        log.info("siiiiiiiiiiiiiiiiiiddddddddddd"+senderid);
-        log.info("mmmmmmmmmmmmmmmmmmmmmmmmmmmmmm"+message);
-        log.info("kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk"+secureKey);
-        log.info("hashhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh"+hashMsg);
+        log.info("uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu" + username);
+        log.info("siiiiiiiiiiiiiiiiiiddddddddddd" + senderid);
+        log.info("mmmmmmmmmmmmmmmmmmmmmmmmmmmmmm" + message);
+        log.info("kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk" + secureKey);
+        log.info("hashhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh" + hashMsg);
         List<String> entriesToBeModified = new ArrayList<>();
         for (String key : requestBody.keySet()) {
             if (key.equals(configMap.get(SMSConstants.SENDER_PASSWORD_IDENTIFIER))) {
@@ -249,7 +252,7 @@ public class MSDGSMSServiceImpl extends BaseSMSService {
                 else if (value.equals("$message"))
                     configMap.put(SMSConstants.SENDER_MESSAGE_IDENTIFIER, key);
 
-               log.info(""+configMap.toString());
+                log.info("" + configMap.toString());
             }
         }
         return configMap;
@@ -268,14 +271,14 @@ public class MSDGSMSServiceImpl extends BaseSMSService {
         StringBuffer finalString = new StringBuffer();
         finalString.append(userName.trim()).append(senderId.trim()).append(content.trim()).append(secureKey.trim());
         String hashGen = finalString.toString();
-        log.info("hashhhhhhhhinnnnggggggggg   "+hashGen);
+        log.info("hashhhhhhhhinnnnggggggggg   " + hashGen);
         StringBuffer sb = null;
         MessageDigest md;
         try {
             md = MessageDigest.getInstance("SHA-512");
-            log.info("mdddddddd  "+md.toString());
+            log.info("mdddddddd  " + md.toString());
             md.update(hashGen.getBytes());
-            log.info("mdddddddd222222222  "+md.toString());
+            log.info("mdddddddd222222222  " + md.toString());
             byte byteData[] = md.digest();
             // convert the byte to hex format method 1
             sb = new StringBuffer();
@@ -311,5 +314,4 @@ public class MSDGSMSServiceImpl extends BaseSMSService {
         return sb.toString();
     }
 
-  
 }
