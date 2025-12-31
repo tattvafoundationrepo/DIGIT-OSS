@@ -39,8 +39,10 @@ public class ExternalEmailService implements EmailService {
 	public void sendEmail(Email email) {
 		log.info("📧 Attempting to send email to: {}", email.getEmailTo());
 		log.info("📧 Subject: {}", email.getSubject());
-
-		if (email.isHTML()) {
+		boolean hasHtmlContent = (email.getBody() != null &&
+				(email.getBody().trim().startsWith("<") ||
+						email.getBody().contains("<!DOCTYPE html>")));
+		if (email.isHTML() || hasHtmlContent) {
 			sendHTMLEmail(email);
 		} else {
 			sendTextEmail(email);
@@ -102,7 +104,7 @@ public class ExternalEmailService implements EmailService {
 			}
 			helper.setSubject(email.getSubject());
 
-			boolean isHtml = false;
+			boolean isHtml = email.isHTML();
 			helper.setText(email.getBody(), isHtml);
 
 			log.info("📧 Email type: {}", isHtml ? "HTML" : "Plain Text");
