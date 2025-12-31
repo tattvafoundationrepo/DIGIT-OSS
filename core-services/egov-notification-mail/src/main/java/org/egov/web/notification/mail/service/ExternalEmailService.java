@@ -104,10 +104,9 @@ public class ExternalEmailService implements EmailService {
 			}
 			helper.setSubject(email.getSubject());
 
-			boolean isHtml = email.isHTML();
-			helper.setText(email.getBody(), isHtml);
+			helper.setText(email.getBody(), true);
 
-			log.info("📧 Email type: {}", isHtml ? "HTML" : "Plain Text");
+			log.info("📧 Email type: {}", true ? "HTML" : "Plain Text");
 
 			// CRITICAL: This is the part that was missing in your text/html methods
 			if (email.getAttachments() != null && !email.getAttachments().isEmpty()) {
