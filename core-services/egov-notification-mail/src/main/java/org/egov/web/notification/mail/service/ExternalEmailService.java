@@ -67,24 +67,25 @@ public class ExternalEmailService implements EmailService {
 	}
 
 	// private void sendHTMLEmail(Email email) {
-	// 	MimeMessage message = mailSender.createMimeMessage();
-	// 	MimeMessageHelper helper;
-	// 	try {
-	// 		helper = new MimeMessageHelper(message, true, "UTF-8");
+	// MimeMessage message = mailSender.createMimeMessage();
+	// MimeMessageHelper helper;
+	// try {
+	// helper = new MimeMessageHelper(message, true, "UTF-8");
 
-	// 		// ADD THIS - Set FROM address
-	// 		helper.setFrom(emailProperties.getMailFrom());
+	// // ADD THIS - Set FROM address
+	// helper.setFrom(emailProperties.getMailFrom());
 
-	// 		helper.setTo(email.getEmailTo().toArray(new String[0]));
-	// 		helper.setSubject(email.getSubject());
-	// 		helper.setText(email.getBody(), true);
+	// helper.setTo(email.getEmailTo().toArray(new String[0]));
+	// helper.setSubject(email.getSubject());
+	// helper.setText(email.getBody(), true);
 
-	// 		mailSender.send(message);
-	// 		log.info("✅ HTML email sent successfully");
-	// 	} catch (MessagingException e) {
-	// 		log.error(EXCEPTION_MESSAGE, e);
-	// 		throw new RuntimeException("Failed to send HTML email: " + e.getMessage(), e);
-	// 	}
+	// mailSender.send(message);
+	// log.info("✅ HTML email sent successfully");
+	// } catch (MessagingException e) {
+	// log.error(EXCEPTION_MESSAGE, e);
+	// throw new RuntimeException("Failed to send HTML email: " + e.getMessage(),
+	// e);
+	// }
 	// }
 
 	public void sendHTMLEmail(Email email) {
@@ -102,7 +103,15 @@ public class ExternalEmailService implements EmailService {
 			helper.setSubject(email.getSubject());
 
 			// Use the isHTML flag from the contract
-			helper.setText(email.getBody(), email.isHTML());
+			// helper.setText(email.getBody(), email.isHTML());
+            boolean isHtml = email.isHTML();
+
+
+			if (isHtml) {
+				message.setContent(email.getBody(), "text/html; charset=utf-8");
+			} else {
+				message.setText(email.getBody());
+			}
 
 			// CRITICAL: This is the part that was missing in your text/html methods
 			if (email.getAttachments() != null && !email.getAttachments().isEmpty()) {
