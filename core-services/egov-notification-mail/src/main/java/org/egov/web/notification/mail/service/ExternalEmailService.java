@@ -102,16 +102,10 @@ public class ExternalEmailService implements EmailService {
 			}
 			helper.setSubject(email.getSubject());
 
-			// Use the isHTML flag from the contract
-			// helper.setText(email.getBody(), email.isHTML());
-            boolean isHtml = email.isHTML();
+			boolean isHtml = email.isHTML();
+			helper.setText(email.getBody(), isHtml);
 
-
-			if (isHtml) {
-				message.setContent(email.getBody(), "text/html; charset=utf-8");
-			} else {
-				message.setText(email.getBody());
-			}
+			log.info("📧 Email type: {}", isHtml ? "HTML" : "Plain Text");
 
 			// CRITICAL: This is the part that was missing in your text/html methods
 			if (email.getAttachments() != null && !email.getAttachments().isEmpty()) {
